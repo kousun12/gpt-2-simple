@@ -8,7 +8,7 @@ gpt_2_simple.egg-info/
 build/
 
 .idea/workspace.xml
-.idea/gpt-2.iml
+.idea/gpt-2-simple.iml
 .idea/misc.xml
 .idea/workspace.xml
 .idea/dictionaries
