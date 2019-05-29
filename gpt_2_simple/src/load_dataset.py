@@ -24,12 +24,15 @@ def load_dataset(enc, path, combine):
     token_chunks = []
     raw_text = ''
     for path in tqdm.tqdm(paths):
+        print(f'loading path {path}')
         if path.endswith('.npz'):
+            print(f'pre-encoded npz')
             # Pre-encoded
             with np.load(path) as npz:
                 for item in npz.files:
                     token_chunks.append(npz[item])
         elif path.endswith('.csv'):
+            print(f'loading csv')
             start_token = "<|startoftext|>"
             end_token = "<|endoftext|>"
             with open(path, 'r', encoding='utf8', errors='ignore') as fp:
