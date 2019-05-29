@@ -513,7 +513,8 @@ def copy_file_from_gdrive(file_path):
     """Copies a file from a mounted Google Drive."""
     is_mounted()
 
-    pathlib.Path(file_path).mkdir(parents=True, exist_ok=True)
+    mkdirs = re.split(r'/\w+\.\w+', file_path)[0]
+    pathlib.Path(mkdirs).mkdir(parents=True, exist_ok=True)
     shutil.copyfile("/content/drive/My Drive/" + file_path, file_path)
 
 
