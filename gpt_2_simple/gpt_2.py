@@ -476,6 +476,7 @@ def copy_checkpoint_to_gdrive(run_name='run1', copy_folder=False):
         shutil.copytree(checkpoint_folder, "/content/drive/My Drive/" + checkpoint_folder)
     else:
         file_path = get_tarfile_name(checkpoint_folder)
+        print('tar', file_path)
 
         # Reference: https://stackoverflow.com/a/17081026
         with tarfile.open(file_path, 'w') as tar:
