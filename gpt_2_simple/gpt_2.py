@@ -24,8 +24,10 @@ from gpt_2_simple.src import model, sample, encoder, memory_saving_gradients
 from gpt_2_simple.src.load_dataset import load_dataset, Sampler
 from gpt_2_simple.src.accumulate import AccumulatingOptimizer
 
+DEF_MODEL = '345M'
 
-def download_gpt2(model_name='117M'):
+
+def download_gpt2(model_name=DEF_MODEL):
     """Downloads the GPT-2 model into the current directory
     from Google Cloud Storage.
 
@@ -71,7 +73,7 @@ def start_tf_sess(threads=-1):
 def finetune(sess,
              dataset,
              steps=-1,
-             model_name='117M',
+             model_name=DEF_MODEL,
              combine=50000,
              batch_size=1,
              learning_rate=0.0001,
@@ -113,7 +115,7 @@ def finetune(sess,
                                 os.path.join(checkpoint_path, file))
             except FileNotFoundError as fnf_error:
                 print("You need to download the GPT-2 model first via download_gpt2()")
-                raise(fnf_error)
+                raise (fnf_error)
 
     enc = encoder.get_encoder(checkpoint_path)
     hparams = model.default_hparams()
@@ -206,13 +208,13 @@ def finetune(sess,
         print(
             'Saving',
             os.path.join(checkpoint_path,
-                         'model-{}').format(counter-1))
+                         'model-{}').format(counter - 1))
         saver.save(
             sess,
             os.path.join(checkpoint_path, 'model'),
-            global_step=counter-1)
+            global_step=counter - 1)
         with open(counter_path, 'w') as fp:
-            fp.write(str(counter-1) + '\n')
+            fp.write(str(counter - 1) + '\n')
 
     def generate_samples():
         context_tokens = data_sampler.sample(1)
@@ -276,7 +278,7 @@ def finetune(sess,
 
                 print(
                     '[{counter} | {time:2.2f}] loss={loss:2.2f} avg={avg:2.2f}'
-                    .format(
+                        .format(
                         counter=counter,
                         time=time.time() - start_time,
                         loss=v_loss,
@@ -375,8 +377,8 @@ def generate(sess,
             out = sess.run(output)
         else:
             out = sess.run(output, feed_dict={
-                    context: batch_size * [context_tokens]
-                })
+                context: batch_size * [context_tokens]
+            })
         for i in range(batch_size):
             generated += 1
             gen_text = enc.decode(out[i])
@@ -513,7 +515,7 @@ def copy_file_from_gdrive(file_path):
     shutil.copyfile("/content/drive/My Drive/" + file_path, file_path)
 
 
-def is_gpt2_downloaded(model_name='117M'):
+def is_gpt2_downloaded(model_name=DEF_MODEL):
     """Checks if the original model + associated files are present in folder."""
 
     for filename in ['checkpoint', 'encoder.json', 'hparams.json',
@@ -541,7 +543,7 @@ def encode_csv(csv_path, out_path='csv_encoded.txt', header=True,
 
 
 def encode_dataset(file_path, out_path='text_encoded.npz',
-                   model_name="117M",
+                   model_name=DEF_MODEL,
                    combine=50000):
     """Preencodes a text document into chunks and compresses it,
     saving time when generated.
@@ -565,72 +567,72 @@ def cmd():
     )
 
     # Explicit arguments
-    
+
     parser.add_argument(
         '--mode', help='Mode for using the CLI (either "finetune" or "generate") [Required]', nargs='?')
     parser.add_argument(
-        '--run_name',  help="[finetune/generate] Run number to save/load the model",
+        '--run_name', help="[finetune/generate] Run number to save/load the model",
         nargs='?', default='run1')
     parser.add_argument(
-        '--model_name',  help="[finetune] Name of the GPT-2 model to finetune",
-        nargs='?', default='117M')
+        '--model_name', help="[finetune] Name of the GPT-2 model to finetune",
+        nargs='?', default=DEF_MODEL)
     parser.add_argument(
-        '--dataset',  help="[finetune] Path to the source text.",
+        '--dataset', help="[finetune] Path to the source text.",
         nargs='?', default=None)
     parser.add_argument(
-        '--steps',  help="[finetune] Number of steps to train (-1 for infinite)",
+        '--steps', help="[finetune] Number of steps to train (-1 for infinite)",
         nargs='?', default=-1)
     parser.add_argument(
-        '--restore_from',  help="[finetune] Whether to load model 'fresh' or from 'latest' checkpoint.",
+        '--restore_from', help="[finetune] Whether to load model 'fresh' or from 'latest' checkpoint.",
         nargs='?', default='latest')
     parser.add_argument(
-        '--sample_every',  help="[finetune] After how many steps to print sample",
+        '--sample_every', help="[finetune] After how many steps to print sample",
         nargs='?', default=1000000, type=int)
     parser.add_argument(
-        '--save_every',  help="[finetune] After how many steps to save checkpoint",
+        '--save_every', help="[finetune] After how many steps to save checkpoint",
         nargs='?', default=100, type=int)
     parser.add_argument(
-        '--print_every',  help="[finetune] After how many steps to print progress",
+        '--print_every', help="[finetune] After how many steps to print progress",
         nargs='?', default=10, type=int)
     parser.add_argument(
-        '--overwrite',  help="[finetune] Overwrite existing model when continuing training",
+        '--overwrite', help="[finetune] Overwrite existing model when continuing training",
         nargs='?', default=False, type=lambda x: (str(x).lower() == 'true'))
     parser.add_argument(
-        '--nfiles',  help="[generate] How many files to generate.",
+        '--nfiles', help="[generate] How many files to generate.",
         nargs='?', default=1, type=int)
     parser.add_argument(
-        '--nsamples',  help="[generate] How many texts to generate.",
+        '--nsamples', help="[generate] How many texts to generate.",
         nargs='?', default=1, type=int)
     parser.add_argument(
-        '--folder',  help="[generate] Folder to save the generated files",
+        '--folder', help="[generate] Folder to save the generated files",
         nargs='?', default="gen", type=str)
     parser.add_argument(
-        '--length',  help="[generate] Length (tokens) of the generated texts",
+        '--length', help="[generate] Length (tokens) of the generated texts",
         nargs='?', default=1023, type=int)
     parser.add_argument(
-        '--temperature',  help="[generate] Temperature of the generated texts",
+        '--temperature', help="[generate] Temperature of the generated texts",
         nargs='?', default=0.7, type=float)
     parser.add_argument(
-        '--top_k',  help="[generate] Sample only from top k tokens",
+        '--top_k', help="[generate] Sample only from top k tokens",
         nargs='?', default=0, type=int)
     parser.add_argument(
-        '--top_p',  help="[generate] Sample from top p prob (overrides top_k if nonzero)",
+        '--top_p', help="[generate] Sample from top p prob (overrides top_k if nonzero)",
         nargs='?', default=0.0, type=float)
     parser.add_argument(
-        '--batch_size',  help="[generate] Batch size for generation (increase for GPUs)",
+        '--batch_size', help="[generate] Batch size for generation (increase for GPUs)",
         nargs='?', default=1, type=int)
     parser.add_argument(
-        '--prefix',  help="[generate] Prefix for generated texts",
+        '--prefix', help="[generate] Prefix for generated texts",
         nargs='?', default=None)
     parser.add_argument(
-        '--truncate',  help="[generate] Truncation for generated texts",
+        '--truncate', help="[generate] Truncation for generated texts",
         nargs='?', default=None)
     # https://stackoverflow.com/a/46951029
     parser.add_argument(
-        '--include_prefix',  help="[generate] Include prefix when truncating.",
+        '--include_prefix', help="[generate] Include prefix when truncating.",
         nargs='?', default=True, type=lambda x: (str(x).lower() == 'true'))
     parser.add_argument(
-        '--sample_delim',  help="[generate] Delimiter between each generated sample.",
+        '--sample_delim', help="[generate] Delimiter between each generated sample.",
         nargs='?', default='=' * 20 + '\n', type=str)
 
     # Positional arguments
@@ -698,7 +700,7 @@ def cmd_generate(nfiles, nsamples, folder,
 
     for _ in trange(nfiles):
         gen_file = os.path.join(folder,
-                    'gpt2_gentext_{:%Y%m%d_%H%M%S}.txt'.format(datetime.utcnow()))
+                                'gpt2_gentext_{:%Y%m%d_%H%M%S}.txt'.format(datetime.utcnow()))
 
         generate_to_file(sess,
                          destination_path=gen_file,
