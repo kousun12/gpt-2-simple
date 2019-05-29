@@ -4,6 +4,7 @@ import json
 import requests
 import sys
 import shutil
+import pathlib
 import re
 from tqdm import tqdm, trange
 import numpy as np
@@ -512,6 +513,7 @@ def copy_file_from_gdrive(file_path):
     """Copies a file from a mounted Google Drive."""
     is_mounted()
 
+    pathlib.Path(file_path).mkdir(parents=True, exist_ok=True)
     shutil.copyfile("/content/drive/My Drive/" + file_path, file_path)
 
 
