@@ -275,7 +275,7 @@ def finetune(sess,
 
             summary_log.add_summary(v_summary, counter)
 
-            if counter % print_every == 0:
+            if counter % print_every == 0 or counter == 1:
                 avg_loss = (avg_loss[0] * 0.99 + v_loss,
                             avg_loss[1] * 0.99 + 1.0)
 
