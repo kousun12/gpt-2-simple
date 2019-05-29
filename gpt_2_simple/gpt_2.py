@@ -24,6 +24,7 @@ except:
 from gpt_2_simple.src import model, sample, encoder, memory_saving_gradients
 from gpt_2_simple.src.load_dataset import load_dataset, Sampler
 from gpt_2_simple.src.accumulate import AccumulatingOptimizer
+import gpt_2_simple.src.sample_utils as sf
 
 DEF_MODEL = '345M'
 
@@ -204,19 +205,17 @@ def finetune(sess,
             counter = int(fp.read()) + 1
     counter_base = counter
 
-    def save(final=False):
+    def save(copy=True):
         maketree(checkpoint_path)
-        print(
-            'Saving',
-            os.path.join(checkpoint_path,
-                         'model-{}').format(counter - 1))
+        model_str = os.path.join(checkpoint_path, 'model-{}').format(counter - 1)
+        print('Saving', model_str)
         saver.save(
             sess,
             os.path.join(checkpoint_path, 'model'),
             global_step=counter - 1)
         with open(counter_path, 'w') as fp:
             fp.write(str(counter - 1) + '\n')
-        if final:
+        if copy:
             copy_checkpoint_to_gdrive(run_name)
 
     def generate_samples():
@@ -229,11 +228,11 @@ def finetune(sess,
                 feed_dict={context: batch_size * [context_tokens]})
             for i in range(min(sample_num - index, batch_size)):
                 text = enc.decode(out[i])
-                text = '======== SAMPLE {} ========\n{}\n'.format(
-                    index + 1, text)
-                all_text.append(text)
+                c_out = sf.get_output(text, sample=index + 1)
+                all_text.append(c_out)
+                print(c_out)
                 index += 1
-        print(text)
+
         maketree(os.path.join(SAMPLE_DIR, run_name))
         with open(
                 os.path.join(SAMPLE_DIR, run_name,
@@ -247,7 +246,7 @@ def finetune(sess,
         for file in files:
             if file.startswith('model') or file.startswith('events'):
                 os.remove(os.path.join(checkpoint_path, file))
-        save()
+        save(False)
 
     avg_loss = (0.0, 0.0)
     start_time = time.time()
@@ -255,7 +254,7 @@ def finetune(sess,
     try:
         while True:
             if steps > 0 and counter == (counter_base + steps):
-                save(True)
+                save()
                 return
             if (counter - 1) % save_every == 0 and counter > 1:
                 save()
@@ -290,11 +289,10 @@ def finetune(sess,
             counter += 1
     except KeyboardInterrupt:
         print('interrupted')
-        save()
+        save(False)
 
 
-def load_gpt2(sess,
-              run_name="run1"):
+def load_gpt2(sess, run_name="run1"):
     """Loads the model checkpoint into a TensorFlow session
     for repeated predictions.
     """
@@ -472,6 +470,7 @@ def copy_checkpoint_to_gdrive(run_name='run1', copy_folder=False):
     is_mounted()
 
     checkpoint_folder = os.path.join('checkpoint', run_name)
+    print('Copy to GDrive', checkpoint_folder)
 
     if copy_folder:
         shutil.copytree(checkpoint_folder, "/content/drive/My Drive/" + checkpoint_folder)
