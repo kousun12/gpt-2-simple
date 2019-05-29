@@ -39,6 +39,7 @@ def load_dataset(enc, path, combine):
                     raw_text += start_token + row[0] + end_token + "\n"
         else:
             # Plain text
+            print(f'loading raw text dataset {path}')
             with open(path, 'r', encoding='utf8', errors='ignore') as fp:
                 raw_text += fp.read()
             if len(raw_text) >= combine:
@@ -48,6 +49,7 @@ def load_dataset(enc, path, combine):
             else:
                 raw_text += '<|endoftext|>'
     if raw_text:
+        print(f'raw text sample: {raw_text[0:100]}')
         tokens = np.stack(enc.encode(raw_text))
         token_chunks.append(tokens)
     return token_chunks

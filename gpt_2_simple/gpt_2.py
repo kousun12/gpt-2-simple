@@ -188,7 +188,7 @@ def finetune(sess,
     print('Loading checkpoint', ckpt)
     saver.restore(sess, ckpt)
 
-    print('Loading dataset...')
+    print(f'Loading dataset @ {dataset}')
     chunks = load_dataset(enc, dataset, combine)
     data_sampler = Sampler(chunks)
     print('dataset has', data_sampler.total_size, 'tokens')
