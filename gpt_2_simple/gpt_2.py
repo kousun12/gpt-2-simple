@@ -203,7 +203,7 @@ def finetune(sess,
             counter = int(fp.read()) + 1
     counter_base = counter
 
-    def save():
+    def save(final=False):
         maketree(checkpoint_path)
         print(
             'Saving',
@@ -215,6 +215,8 @@ def finetune(sess,
             global_step=counter - 1)
         with open(counter_path, 'w') as fp:
             fp.write(str(counter - 1) + '\n')
+        if final:
+            copy_checkpoint_to_gdrive(run_name)
 
     def generate_samples():
         context_tokens = data_sampler.sample(1)
@@ -252,7 +254,7 @@ def finetune(sess,
     try:
         while True:
             if steps > 0 and counter == (counter_base + steps):
-                save()
+                save(True)
                 return
             if (counter - 1) % save_every == 0 and counter > 1:
                 save()
@@ -368,17 +370,15 @@ def generate(sess,
 
     if destination_path:
         f = open(destination_path, 'w')
-    if prefix:
-        context_tokens = enc.encode(prefix)
+
+    context_tokens = enc.encode(prefix) if prefix else None
     generated = 0
     gen_texts = []
     while generated < nsamples:
-        if not prefix:
-            out = sess.run(output)
+        if context_tokens:
+            out = sess.run(output, feed_dict={context: batch_size * [context_tokens]})
         else:
-            out = sess.run(output, feed_dict={
-                context: batch_size * [context_tokens]
-            })
+            out = sess.run(output)
         for i in range(batch_size):
             generated += 1
             gen_text = enc.decode(out[i])
