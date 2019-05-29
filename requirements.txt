@@ -3,3 +3,5 @@ requests
 tqdm
 numpy
 toposort
+tensorflow
+ipdb
