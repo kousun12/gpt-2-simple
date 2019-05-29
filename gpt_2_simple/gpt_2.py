@@ -553,7 +553,7 @@ def encode_dataset(file_path, out_path='text_encoded.npz',
 
     model_path = os.path.join('models', model_name)
     enc = encoder.get_encoder(model_path)
-    print('Reading files')
+    print(f'Reading files @ {file_path}')
     chunks = load_dataset(enc, file_path, combine)
     print('Writing', out_path)
     np.savez_compressed(out_path, *chunks)
