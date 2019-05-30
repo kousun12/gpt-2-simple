@@ -367,6 +367,7 @@ def generate(sess,
     )
 
     if destination_path:
+        os.makedirs(os.path.dirname(destination_path), exist_ok=True)
         f = open(destination_path, 'w')
 
     context_tokens = enc.encode(sf.title_fmt(prefix)) if prefix else None
@@ -392,6 +393,7 @@ def generate(sess,
 
     if destination_path:
         f.close()
+        copy_file_to_gdrive(destination_path)
 
     if return_as_list:
         return gen_texts
@@ -465,8 +467,7 @@ def copy_checkpoint_to_gdrive(run_name='run1', copy_folder=False):
         # Reference: https://stackoverflow.com/a/17081026
         with tarfile.open(file_path, 'w') as tar:
             tar.add(checkpoint_folder)
-
-        shutil.copyfile(file_path, "/content/drive/My Drive/" + file_path)
+        copy_file_to_gdrive(file_path)
 
 
 def copy_checkpoint_from_gdrive(run_name='run1', copy_folder=False):
@@ -479,9 +480,7 @@ def copy_checkpoint_from_gdrive(run_name='run1', copy_folder=False):
         shutil.copytree("/content/drive/My Drive/" + checkpoint_folder, checkpoint_folder)
     else:
         file_path = get_tarfile_name(checkpoint_folder)
-
         shutil.copyfile("/content/drive/My Drive/" + file_path, file_path)
-
         with tarfile.open(file_path, 'r') as tar:
             tar.extractall()
 
