@@ -401,8 +401,7 @@ def generate_to_file(sess,
                      length=1023,
                      temperature=0.7,
                      top_k=0,
-                     top_p=0.0,
-                     include_prefix=True):
+                     top_p=0.0):
     """Generates the texts to a file.
 
     sample_delim separates texts: set to '' if each text is a small document.
@@ -423,8 +422,7 @@ def generate_to_file(sess,
              length,
              temperature,
              top_k,
-             top_p,
-             include_prefix)
+             top_p)
 
 
 def mount_gdrive():
@@ -611,10 +609,6 @@ def cmd():
     parser.add_argument(
         '--truncate', help="[generate] Truncation for generated texts",
         nargs='?', default=None)
-    # https://stackoverflow.com/a/46951029
-    parser.add_argument(
-        '--include_prefix', help="[generate] Include prefix when truncating.",
-        nargs='?', default=True, type=lambda x: (str(x).lower() == 'true'))
     parser.add_argument(
         '--sample_delim', help="[generate] Delimiter between each generated sample.",
         nargs='?', default='=' * 20 + '\n', type=str)
@@ -641,7 +635,6 @@ def cmd():
                      folder=args.folder, length=args.length,
                      temperature=args.temperature, batch_size=args.batch_size,
                      prefix=args.prefix, truncate=args.truncate,
-                     include_prefix=args.include_prefix,
                      sample_delim=args.sample_delim, run_name=args.run_name,
                      top_k=args.top_k, top_p=args.top_p)
 
@@ -665,7 +658,7 @@ def cmd_finetune(dataset, run_name, model_name, steps,
 
 def cmd_generate(nfiles, nsamples, folder,
                  length, temperature, batch_size,
-                 prefix, truncate, include_prefix,
+                 prefix, truncate,
                  sample_delim, run_name,
                  top_k, top_p):
     """Wrapper script for generating text via the CLI.
@@ -694,7 +687,6 @@ def cmd_generate(nfiles, nsamples, folder,
                          batch_size=batch_size,
                          prefix=prefix,
                          truncate=truncate,
-                         include_prefix=include_prefix,
                          sample_delim=sample_delim,
                          top_k=top_k,
                          top_p=top_p
