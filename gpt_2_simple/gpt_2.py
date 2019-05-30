@@ -321,7 +321,6 @@ def generate(sess,
              return_as_list=False,
              truncate=None,
              destination_path=None,
-             sample_delim='=' * 20 + '\n',
              prefix=None,
              seed=None,
              nsamples=1,
@@ -329,8 +328,7 @@ def generate(sess,
              length=1023,
              temperature=0.7,
              top_k=0,
-             top_p=0.0,
-             include_prefix=True):
+             top_p=0.0):
     """Generates text from a model loaded into memory.
 
     Adapted from https://github.com/openai/gpt-2/blob/master/src/interactive_conditional_samples.py
@@ -339,9 +337,6 @@ def generate(sess,
     if batch_size is None:
         batch_size = 1
     assert nsamples % batch_size == 0
-
-    if nsamples == 1:
-        sample_delim = ''
 
     if prefix:
         context = tf.placeholder(tf.int32, [batch_size, None])
@@ -380,25 +375,11 @@ def generate(sess,
             out = sess.run(output)
         for i in range(batch_size):
             generated += 1
-            gen_text = enc.decode(out[i])
-            if prefix:
-                gen_text = prefix[0] + gen_text
-            if truncate:
-                truncate_esc = re.escape(truncate)
-                if prefix and not include_prefix:
-                    prefix_esc = re.escape(prefix)
-                    pattern = '(?:{})(.*?)(?:{})'.format(prefix_esc,
-                                                         truncate_esc)
-                else:
-                    pattern = '(.*?)(?:{})'.format(truncate_esc)
-
-                trunc_text = re.search(pattern, gen_text, re.S)
-                if trunc_text:
-                    gen_text = trunc_text.group(1)
+            gen_text = sf.get_output(enc.decode(out[i]), prefix, f'{generated} [t:{temperature}]', truncate)
             if destination_path:
-                f.write("{}\n{}".format(gen_text, sample_delim))
+                f.write(gen_text)
             if not return_as_list and not destination_path:
-                print("{}\n{}".format(gen_text, sample_delim))
+                print(gen_text)
             gen_texts.append(gen_text)
 
     if destination_path:
