@@ -342,7 +342,6 @@ def generate(sess,
         context = tf.placeholder(tf.int32, [batch_size, None])
 
     CHECKPOINT_DIR = 'checkpoint'
-    SAMPLE_DIR = 'samples'
 
     checkpoint_path = os.path.join(CHECKPOINT_DIR, run_name)
 
@@ -350,6 +349,11 @@ def generate(sess,
     hparams = model.default_hparams()
     with open(os.path.join(checkpoint_path, 'hparams.json')) as f:
         hparams.override_from_dict(json.load(f))
+
+    if length is None:
+        length = hparams.n_ctx // 2
+    elif length > hparams.n_ctx:
+        raise ValueError("Can't get samples longer than window size: %s" % hparams.n_ctx)
 
     np.random.seed(seed)
     tf.set_random_seed(seed)
