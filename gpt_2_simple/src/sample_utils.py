@@ -8,7 +8,7 @@ TITLE_T = '<|title|>'
 
 def title_fmt(title):
     # format input into title; NB must match training data format!
-    return f'{END_T}\n{TITLE_T}{title}{TITLE_T}\n\n\n'
+    return f'{TITLE_T}{title}{TITLE_T}\n\n\n'
 
 
 def output_fmt(text, trunc_first):

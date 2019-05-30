@@ -39,9 +39,8 @@ def top_p_logits(logits, p):
         )
 
 
-def sample_sequence(*, hparams, length, start_token=None,
-                    batch_size=None, context=None, temperature=1,
-                    top_k=0, top_p=0.0):
+def sample_sequence(*, hparams, length, start_token=None, batch_size=None, context=None, temperature=1, top_k=0,
+                    top_p=0.0):
     if start_token is None:
         assert context is not None, 'Specify exactly one of start_token and context!'
     else:
@@ -49,13 +48,11 @@ def sample_sequence(*, hparams, length, start_token=None,
         context = tf.fill([batch_size, 1], start_token)
 
     def step(hparams, tokens, past=None):
-        lm_output = model.model(hparams=hparams, X=tokens,
-                                past=past, reuse=tf.AUTO_REUSE)
+        lm_output = model.model(hparams=hparams, X=tokens, past=past, reuse=tf.AUTO_REUSE)
 
         logits = lm_output['logits'][:, :, :hparams.n_vocab]
         presents = lm_output['present']
-        presents.set_shape(model.past_shape(
-            hparams=hparams, batch_size=batch_size))
+        presents.set_shape(model.past_shape(hparams=hparams, batch_size=batch_size))
         return {
             'logits': logits,
             'presents': presents,
@@ -74,8 +71,7 @@ def sample_sequence(*, hparams, length, start_token=None,
                 logits = top_p_logits(logits, p=top_p)
             else:
                 logits = top_k_logits(logits, k=top_k)
-            samples = tf.multinomial(
-                logits, num_samples=1, output_dtype=tf.int32)
+            samples = tf.multinomial(logits, num_samples=1, output_dtype=tf.int32)
             return [
                 tf.concat([past, next_outputs['presents']], axis=-2),
                 tf.squeeze(samples, axis=[1]),
@@ -94,8 +90,7 @@ def sample_sequence(*, hparams, length, start_token=None,
                 context,
             ],
             shape_invariants=[
-                tf.TensorShape(model.past_shape(
-                    hparams=hparams, batch_size=batch_size)),
+                tf.TensorShape(model.past_shape(hparams=hparams, batch_size=batch_size)),
                 tf.TensorShape([batch_size]),
                 tf.TensorShape([batch_size, None]),
             ],
@@ -103,3 +98,4 @@ def sample_sequence(*, hparams, length, start_token=None,
         )
 
         return tokens
+

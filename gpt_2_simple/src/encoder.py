@@ -109,7 +109,7 @@ class Encoder:
         return text
 
 
-XTRA_TOKENS = ['<|title|>']
+XTRA_TOKENS = []
 
 
 # def get_encoder(model_name):
@@ -131,7 +131,6 @@ def get_encoder(checkpoint_path):
     with open(os.path.join(checkpoint_path, 'vocab.bpe'), 'r', encoding="utf-8") as f:
         bpe_data = f.read()
     max_tkn = max(encoder.values())
-    encoder.update({t: max_tkn + i for i, t in enumerate(XTRA_TOKENS, start=1)})
     bpe_merges = [tuple(merge_str.split()) for merge_str in bpe_data.split('\n')[1:-1]]
     return Encoder(
         encoder=encoder,

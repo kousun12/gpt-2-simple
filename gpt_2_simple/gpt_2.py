@@ -364,7 +364,7 @@ def generate(sess,
         context=context if prefix else None,
         batch_size=batch_size,
         temperature=temperature, top_k=top_k, top_p=top_p
-    )[:, 1:]
+    )
 
     if destination_path:
         f = open(destination_path, 'w')
@@ -376,13 +376,14 @@ def generate(sess,
     batches = range(batch_size)
     while generated < nsamples:
         if context_tokens:
-            out = sess.run(output, feed_dict={context: [context_tokens for _ in batches]})[:, n_toks:]
+            out = sess.run(output, feed_dict={context: batch_size * [context_tokens]})
+            # out = out[:, n_toks:]  # remove the context
         else:
             out = sess.run(output)
         for i in batches:
             generated += 1
             raw_out = enc.decode(out[i])
-            gen_text = sf.get_output(raw_out, prefix, f'{generated} [t:{temperature}]', truncate)
+            gen_text = sf.get_output(raw_out, None, f'{generated} [t:{temperature}]', truncate)
             if destination_path:
                 f.write(gen_text)
             if not return_as_list and not destination_path:
