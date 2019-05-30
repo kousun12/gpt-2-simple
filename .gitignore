@@ -6,6 +6,7 @@ shakespeare.txt
 dist/
 gpt_2_simple.egg-info/
 build/
+checkpoint/
 
 .idea/workspace.xml
 .idea/gpt-2-simple.iml

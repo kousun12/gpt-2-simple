@@ -350,7 +350,7 @@ def generate(sess,
     with open(os.path.join(checkpoint_path, 'hparams.json')) as f:
         hparams.override_from_dict(json.load(f))
 
-    if length is None:
+    if length is None or length < 0:
         length = hparams.n_ctx // 2
     elif length > hparams.n_ctx:
         raise ValueError("Can't get samples longer than window size: %s" % hparams.n_ctx)
@@ -370,16 +370,19 @@ def generate(sess,
         f = open(destination_path, 'w')
 
     context_tokens = enc.encode(sf.title_fmt(prefix)) if prefix else None
+    n_toks = len(context_tokens)
     generated = 0
     gen_texts = []
+    batches = range(batch_size)
     while generated < nsamples:
         if context_tokens:
-            out = sess.run(output, feed_dict={context: batch_size * [context_tokens]})
+            out = sess.run(output, feed_dict={context: [context_tokens for _ in batches]})[:, n_toks:]
         else:
             out = sess.run(output)
-        for i in range(batch_size):
+        for i in batches:
             generated += 1
-            gen_text = sf.get_output(enc.decode(out[i]), prefix, f'{generated} [t:{temperature}]', truncate)
+            raw_out = enc.decode(out[i])
+            gen_text = sf.get_output(raw_out, prefix, f'{generated} [t:{temperature}]', truncate)
             if destination_path:
                 f.write(gen_text)
             if not return_as_list and not destination_path:
@@ -397,7 +400,6 @@ def generate_to_file(sess,
                      run_name='run1',
                      truncate=None,
                      destination_path='gpt_2_gen_texts.txt',
-                     sample_delim='=' * 20 + '\n',
                      prefix=None,
                      seed=None,
                      nsamples=1,
@@ -408,25 +410,23 @@ def generate_to_file(sess,
                      top_p=0.0):
     """Generates the texts to a file.
 
-    sample_delim separates texts: set to '' if each text is a small document.
 
     Adapted from https://github.com/minimaxir/textgenrnn/blob/master/textgenrnn/textgenrnn.py
     """
 
     generate(sess,
-             run_name,
-             False,
-             truncate,
-             destination_path,
-             sample_delim,
-             prefix,
-             seed,
-             nsamples,
-             batch_size,
-             length,
-             temperature,
-             top_k,
-             top_p)
+             run_name=run_name,
+             return_as_list=False,
+             truncate=truncate,
+             destination_path=destination_path,
+             prefix=prefix,
+             seed=seed,
+             nsamples=nsamples,
+             batch_size=batch_size,
+             length=length,
+             temperature=temperature,
+             top_k=top_k,
+             top_p=top_p)
 
 
 def mount_gdrive():
@@ -585,7 +585,7 @@ def cmd():
         nargs='?', default=False, type=lambda x: (str(x).lower() == 'true'))
     parser.add_argument(
         '--nfiles', help="[generate] How many files to generate.",
-        nargs='?', default=1, type=int)
+        nargs='?', default=0, type=int)
     parser.add_argument(
         '--nsamples', help="[generate] How many texts to generate.",
         nargs='?', default=1, type=int)
@@ -594,7 +594,7 @@ def cmd():
         nargs='?', default="gen", type=str)
     parser.add_argument(
         '--length', help="[generate] Length (tokens) of the generated texts",
-        nargs='?', default=1023, type=int)
+        nargs='?', default=None, type=int)
     parser.add_argument(
         '--temperature', help="[generate] Temperature of the generated texts",
         nargs='?', default=0.7, type=float)
@@ -613,9 +613,6 @@ def cmd():
     parser.add_argument(
         '--truncate', help="[generate] Truncation for generated texts",
         nargs='?', default=None)
-    parser.add_argument(
-        '--sample_delim', help="[generate] Delimiter between each generated sample.",
-        nargs='?', default='=' * 20 + '\n', type=str)
 
     # Positional arguments
     parser.add_argument('mode', nargs='?')
@@ -626,7 +623,6 @@ def cmd():
 
     if args.mode == 'finetune':
         assert args.dataset is not None, "You need to provide a dataset."
-
         cmd_finetune(dataset=args.dataset, run_name=args.run_name,
                      model_name=args.model_name,
                      steps=args.steps, restore_from=args.restore_from,
@@ -638,8 +634,7 @@ def cmd():
         cmd_generate(nfiles=args.nfiles, nsamples=args.nsamples,
                      folder=args.folder, length=args.length,
                      temperature=args.temperature, batch_size=args.batch_size,
-                     prefix=args.prefix, truncate=args.truncate,
-                     sample_delim=args.sample_delim, run_name=args.run_name,
+                     prefix=args.prefix, truncate=args.truncate, run_name=args.run_name,
                      top_k=args.top_k, top_p=args.top_p)
 
 
@@ -663,7 +658,7 @@ def cmd_finetune(dataset, run_name, model_name, steps,
 def cmd_generate(nfiles, nsamples, folder,
                  length, temperature, batch_size,
                  prefix, truncate,
-                 sample_delim, run_name,
+                 run_name,
                  top_k, top_p):
     """Wrapper script for generating text via the CLI.
     The files are generated into a folder, which can be downloaded
@@ -679,19 +674,31 @@ def cmd_generate(nfiles, nsamples, folder,
         shutil.rmtree(folder)
         os.mkdir(folder)
 
-    for _ in trange(nfiles):
-        gen_file = os.path.join(folder,
-                                'gpt2_gentext_{:%Y%m%d_%H%M%S}.txt'.format(datetime.utcnow()))
-
-        generate_to_file(sess,
-                         destination_path=gen_file,
-                         length=length,
-                         temperature=temperature,
-                         nsamples=nsamples,
-                         batch_size=batch_size,
-                         prefix=prefix,
-                         truncate=truncate,
-                         sample_delim=sample_delim,
-                         top_k=top_k,
-                         top_p=top_p
-                         )
+    if nfiles:
+        for _ in trange(nfiles):
+            gen_file = os.path.join(folder, 'gpt2_gentext_{:%Y%m%d_%H%M%S}.txt'.format(datetime.utcnow()))
+            generate_to_file(
+                sess,
+                destination_path=gen_file,
+                length=length,
+                temperature=temperature,
+                nsamples=nsamples,
+                batch_size=batch_size,
+                prefix=prefix,
+                truncate=truncate,
+                top_k=top_k,
+                top_p=top_p
+            )
+    else:
+        generate(
+            sess,
+            run_name=run_name,
+            length=length,
+            temperature=temperature,
+            nsamples=nsamples,
+            batch_size=batch_size,
+            prefix=prefix,
+            truncate=truncate,
+            top_k=top_k,
+            top_p=top_p
+        )
