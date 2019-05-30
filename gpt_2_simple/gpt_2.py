@@ -365,7 +365,7 @@ def generate(sess,
     if destination_path:
         f = open(destination_path, 'w')
 
-    context_tokens = enc.encode(prefix) if prefix else None
+    context_tokens = enc.encode(sf.title_fmt(prefix)) if prefix else None
     generated = 0
     gen_texts = []
     while generated < nsamples:
