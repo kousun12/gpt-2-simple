@@ -436,7 +436,7 @@ def gen_batch(sess, titles, **kwargs):
     for title in titles:
         print('gen: ' + title)
         gen_file = 'gpt2_gen/{:%Y%m%d_%H%M%S}'.format(datetime.utcnow()) + f'-{title}.txt'
-        generate_to_file(sess, destination_path=gen_file, **kwargs)
+        generate_to_file(sess, destination_path=gen_file, prefix=title, **kwargs)
 
 
 def mount_gdrive():
