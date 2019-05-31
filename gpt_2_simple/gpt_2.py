@@ -387,7 +387,7 @@ def generate(sess,
             gen_text = sf.get_output(raw_out, None, f'{generated} [t:{temperature}]', truncate)
             if destination_path:
                 f.write(gen_text)
-            if not return_as_list and not destination_path:
+            if not return_as_list:
                 print(gen_text)
             gen_texts.append(gen_text)
 
@@ -488,7 +488,7 @@ def copy_checkpoint_from_gdrive(run_name='run1', copy_folder=False):
 def copy_file_to_gdrive(file_path):
     """Copies a file to a mounted Google Drive."""
     is_mounted()
-
+    print(f'Saving {file_path} to GDrive')
     shutil.copyfile(file_path, "/content/drive/My Drive/" + file_path)
 
 
