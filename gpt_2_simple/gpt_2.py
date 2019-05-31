@@ -432,6 +432,13 @@ def generate_to_file(sess,
              top_p=top_p)
 
 
+def gen_batch(sess, titles, **kwargs):
+    for title in titles:
+        print('gen: ' + title)
+        gen_file = 'gpt2_gen/{:%Y%m%d_%H%M%S}'.format(datetime.utcnow()) + f'-{title}.txt'
+        generate_to_file(sess, **kwargs)
+
+
 def mount_gdrive():
     """Mounts the user's Google Drive in Colaboratory."""
     assert 'google.colab' in sys.modules, "You must be in Colaboratory to mount your Google Drive"
