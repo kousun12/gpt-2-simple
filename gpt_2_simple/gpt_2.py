@@ -58,7 +58,7 @@ def download_gpt2(model_name=DEF_MODEL):
                     pbar.update(chunk_size)
 
 
-def start_tf_sess(threads=-1):
+def start_tf_sess(threads=-1, graph=None):
     """
     Returns a tf.Session w/ config
     """
@@ -68,6 +68,9 @@ def start_tf_sess(threads=-1):
     if threads > 0:
         config.intra_op_parallelism_threads = threads
         config.inter_op_parallelism_threads = threads
+
+    if graph:
+        return tf.Session(config=config, graph=graph)
 
     return tf.Session(config=config)
 
@@ -328,7 +331,10 @@ def generate(sess,
              length=1023,
              temperature=0.7,
              top_k=0,
-             top_p=0.0):
+             top_p=0.0,
+             title=None,
+             body=None
+             ):
     """Generates text from a model loaded into memory.
 
     Adapted from https://github.com/openai/gpt-2/blob/master/src/interactive_conditional_samples.py
@@ -337,6 +343,9 @@ def generate(sess,
     if batch_size is None:
         batch_size = 1
     assert nsamples % batch_size == 0
+
+    if not prefix and (title or body):
+        prefix = sf.prefix_from(title, body)
 
     if prefix:
         context = tf.placeholder(tf.int32, [batch_size, None])
@@ -370,7 +379,7 @@ def generate(sess,
         os.makedirs(os.path.dirname(destination_path), exist_ok=True)
         f = open(destination_path, 'w')
 
-    context_tokens = enc.encode(sf.title_fmt(prefix)) if prefix else None
+    context_tokens = enc.encode(prefix) if prefix else None
     n_toks = len(context_tokens)
     generated = 0
     gen_texts = []

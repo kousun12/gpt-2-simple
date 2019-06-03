@@ -6,6 +6,13 @@ END_T = '<|endoftext|>'
 TITLE_T = '<|title|>'
 
 
+def prefix_from(title, body):
+    b = body or ''
+    if title:
+        return title_fmt(title) + b
+    return b
+
+
 def title_fmt(title):
     # format input into title; NB must match training data format!
     return f'{TITLE_T}{title}{TITLE_T}\n\n\n'
@@ -22,7 +29,7 @@ def _v_spacer(text):
     return V_PAD + "=" * 40 + f' {text} ' + "=" * 40 + V_PAD
 
 
-def get_output(text, title=None, sample=None, trunc_first=False):
+def get_output(text, title=None, sample=None, trunc_first=False, raw=False):
     num = str(sample)
     start = _v_spacer(f"SAMPLE {num}") if sample is not None else ''
 
