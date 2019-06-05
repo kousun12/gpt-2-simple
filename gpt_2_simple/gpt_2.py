@@ -419,7 +419,10 @@ def generate_to_file(sess,
                      length=1023,
                      temperature=0.7,
                      top_k=0,
-                     top_p=0.0):
+                     top_p=0.0,
+                     title=None,
+                     body=None
+                     ):
     """Generates the texts to a file.
 
 
@@ -438,14 +441,20 @@ def generate_to_file(sess,
              length=length,
              temperature=temperature,
              top_k=top_k,
-             top_p=top_p)
+             top_p=top_p,
+             title=title,
+             body=body
+             )
 
 
 def gen_batch(sess, titles, **kwargs):
     for title in titles:
         print('gen: ' + title)
+        body = None
+        if isinstance(title, tuple):
+            title, body = title
         gen_file = 'gpt2_gen/{:%Y%m%d_%H%M%S}'.format(datetime.utcnow()) + f'-{title}.txt'
-        generate_to_file(sess, destination_path=gen_file, prefix=title, **kwargs)
+        generate_to_file(sess, destination_path=gen_file, title=title, body=body, **kwargs)
 
 
 def mount_gdrive():
