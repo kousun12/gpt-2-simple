@@ -449,10 +449,10 @@ def generate_to_file(sess,
 
 def gen_batch(sess, titles, **kwargs):
     for title in titles:
-        print('gen: ' + title)
         body = None
         if isinstance(title, tuple):
             title, body = title
+        print(f'gen: {title}')
         gen_file = 'gpt2_gen/{:%Y%m%d_%H%M%S}'.format(datetime.utcnow()) + f'-{title}.txt'
         generate_to_file(sess, destination_path=gen_file, title=title, body=body, **kwargs)
 
